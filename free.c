@@ -20,10 +20,10 @@
 
 #define WIDTH 800
 #define HEIGHT 600
-#define FONT_SIZE 64
-#define FONT_FILE "/usr/share/fonts/truetype/ttf-droid/DroidSans.ttf"
 #define START_X 0
 #define START_Y (FONT_SIZE + 4)
+#define FONT_SIZE 64
+#define FONT_FILE "/usr/share/fonts/truetype/ttf-droid/DroidSans.ttf"
 
 FT_Library library;
 FT_Face face;
@@ -66,13 +66,10 @@ void draw_bitmap( FT_Bitmap*  bitmap,
 	FT_Int  y_max = y + bitmap->rows;
 
 
-	for ( i = x, p = 0; i < x_max; i++, p++ )
-	{
-		for ( j = y, q = 0; j < y_max; j++, q++ )
-		{
+	for ( i = x, p = 0; i < x_max; i++, p++ ) {
+		for ( j = y, q = 0; j < y_max; j++, q++ ) {
 			if ( i >= WIDTH || j >= HEIGHT )
 			  continue;
-
             if (bitmap->buffer[q * bitmap->width + p])
                 draw_xy(i, j, 255, 0, 0);
 		}
@@ -136,21 +133,16 @@ int main(int argc, char* argv[])
 {
     SDL_Init(SDL_INIT_VIDEO);
     atexit(SDL_Quit);
-    g_pDisplaySurface =
-      SDL_SetVideoMode(WIDTH,HEIGHT,0,SDL_ANYFORMAT);
+    g_pDisplaySurface = SDL_SetVideoMode(WIDTH,HEIGHT,0,SDL_ANYFORMAT);
 
     draw();
 
-    for(;;)
-    {
-	if(SDL_PollEvent(&g_Event)==0)
-	{
-	    SDL_UpdateRect(g_pDisplaySurface,0,0,0,0);
-	}
-	else
-	{
-	    if(g_Event.type==SDL_QUIT) break;
-	}
+    for (;;) {
+    	if (SDL_PollEvent(&g_Event)==0) {
+	        SDL_UpdateRect(g_pDisplaySurface,0,0,0,0);
+    	} else {
+	        if (g_Event.type==SDL_QUIT) break;
+    	}
     }
-    return(0);
+    return 0;
 }
