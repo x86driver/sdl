@@ -21,9 +21,9 @@
 #define WIDTH 800
 #define HEIGHT 600
 #define START_X 0
-#define START_Y (FONT_SIZE + 4)
-#define FONT_SIZE 64
-#define FONT_FILE "/usr/share/fonts/truetype/ttf-droid/DroidSans.ttf"
+#define START_Y (FONT_SIZE * 5)
+#define FONT_SIZE 16
+#define FONT_FILE "/usr/share/cups/fonts/Monospace"
 
 FT_Library library;
 FT_Face face;
@@ -71,7 +71,7 @@ void draw_bitmap( FT_Bitmap*  bitmap,
 			if ( i >= WIDTH || j >= HEIGHT )
 			  continue;
             if (bitmap->buffer[q * bitmap->width + p])
-                draw_xy(i, j, 255, 0, 0);
+                draw_xy(i, j, bitmap->buffer[q * bitmap->width + p], 0, 0);
 		}
 	}
 }
@@ -82,8 +82,9 @@ void drawtext(wchar_t *text)
 
 	FT_Init_FreeType( &library );
 	FT_New_Face( library, FONT_FILE, 0, &face );
-	FT_Set_Char_Size( face, 0, FONT_SIZE * 64,
-			  100, 100 );
+//	FT_Set_Char_Size( face, 0, FONT_SIZE * 64,
+//			  300, 300 );
+    FT_Set_Char_Size(face, FONT_SIZE*32, 0, 400, 0);
 
 	slot = face->glyph;
 
@@ -125,8 +126,16 @@ void drawtext(wchar_t *text)
 void draw()
 {
 	wchar_t text[80];
-	swprintf(text, sizeof(text)/sizeof(wchar_t), L"Guck");
+	swprintf(text, sizeof(text)/sizeof(wchar_t), L"abcdefghijklmnopqrstuvwxyz");
 	drawtext(text);
+}
+
+void draw_white()
+{
+    int i, j;
+    for (j = 0; j < HEIGHT; ++j)
+        for (i = 0; i < WIDTH; ++i)
+            draw_xy(i, j, 255, 255, 255);
 }
 
 int main(int argc, char* argv[])
@@ -135,6 +144,7 @@ int main(int argc, char* argv[])
     atexit(SDL_Quit);
     g_pDisplaySurface = SDL_SetVideoMode(WIDTH,HEIGHT,0,SDL_ANYFORMAT);
 
+//    draw_white();
     draw();
 
     for (;;) {
