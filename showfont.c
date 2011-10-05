@@ -28,16 +28,14 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef HAVE_ICONV
-#include <iconv.h>
-#endif
-
 #include "SDL.h"
 #include "SDL_ttf.h"
 
-#define DEFAULT_PTSIZE	18
+#define DEFAULT_PTSIZE	32
 #define DEFAULT_TEXT	"The quick brown fox jumped over the lazy dog"
 #define NUM_COLORS      256
+//#define DEFAULT_FONT    "/usr/share/cups/fonts/Monospace"
+#define DEFAULT_FONT    "/usr/share/fonts/truetype/arphic/uming.ttc"
 
 static char *Usage =
 "Usage: %s [-solid] [-utf8|-unicode] [-b] [-i] [-u] [-s] [-outline size] [-hintlight|-hintmono|-hintnone] [-nokerning] [-fgcol r,g,b] [-bgcol r,g,b] <font>.ttf [ptsize] [text]\n";
@@ -92,81 +90,6 @@ int main(int argc, char *argv[])
 	/* Default is black and white */
 	forecol = &myforecolor;
 	backcol = &mybackcolor;
-	for ( i=1; argv[i] && argv[i][0] == '-'; ++i ) {
-		if ( strcmp(argv[i], "-solid") == 0 ) {
-			rendersolid = 1;
-		} else
-		if ( strcmp(argv[i], "-utf8") == 0 ) {
-			rendertype = RENDER_UTF8;
-		} else
-		if ( strcmp(argv[i], "-unicode") == 0 ) {
-			rendertype = RENDER_UNICODE;
-		} else
-		if ( strcmp(argv[i], "-b") == 0 ) {
-			renderstyle |= TTF_STYLE_BOLD;
-		} else
-		if ( strcmp(argv[i], "-i") == 0 ) {
-			renderstyle |= TTF_STYLE_ITALIC;
-		} else
-		if ( strcmp(argv[i], "-u") == 0 ) {
-			renderstyle |= TTF_STYLE_UNDERLINE;
-		} else
-		if ( strcmp(argv[i], "-s") == 0 ) {
-			renderstyle |= TTF_STYLE_STRIKETHROUGH;
-		} else
-		if ( strcmp(argv[i], "-outline") == 0 ) {
-			if ( sscanf (argv[++i], "%d", &outline) != 1 ) {
-				fprintf(stderr, Usage, argv0);
-				return(1);
-			}
-		} else
-		if ( strcmp(argv[i], "-hintlight") == 0 ) {
-			kerning = TTF_HINTING_LIGHT;
-		} else
-		if ( strcmp(argv[i], "-hintmono") == 0 ) {
-			kerning = TTF_HINTING_MONO;
-		} else
-		if ( strcmp(argv[i], "-hintnone") == 0 ) {
-			kerning = TTF_HINTING_NONE;
-		} else
-		if ( strcmp(argv[i], "-nokerning") == 0 ) {
-			kerning = 0;
-		} else
-		if ( strcmp(argv[i], "-dump") == 0 ) {
-			dump = 1;
-		} else
-		if ( strcmp(argv[i], "-fgcol") == 0 ) {
-			int r, g, b;
-			if ( sscanf (argv[++i], "%d,%d,%d", &r, &g, &b) != 3 ) {
-				fprintf(stderr, Usage, argv0);
-				return(1);
-			}
-			forecol->r = (Uint8)r;
-			forecol->g = (Uint8)g;
-			forecol->b = (Uint8)b;
-		} else
-		if ( strcmp(argv[i], "-bgcol") == 0 ) {
-			int r, g, b;
-			if ( sscanf (argv[++i], "%d,%d,%d", &r, &g, &b) != 3 ) {
-				fprintf(stderr, Usage, argv0);
-				return(1);
-			}
-			backcol->r = (Uint8)r;
-			backcol->g = (Uint8)g;
-			backcol->b = (Uint8)b;
-		} else {
-			fprintf(stderr, Usage, argv0);
-			return(1);
-		}
-	}
-	argv += i;
-	argc -= i;
-
-	/* Check usage */
-	if ( ! argv[0] ) {
-		fprintf(stderr, Usage, argv0);
-		return(1);
-	}
 
 	/* Initialize SDL */
 	if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
@@ -182,41 +105,16 @@ int main(int argc, char *argv[])
 	}
 
 	/* Open the font file with the requested point size */
-	ptsize = 0;
-	if ( argc > 1 ) {
-		ptsize = atoi(argv[1]);
-	}
-	if ( ptsize == 0 ) {
-		i = 2;
-		ptsize = DEFAULT_PTSIZE;
-	} else {
-		i = 3;
-	}
-	font = TTF_OpenFont(argv[0], ptsize);
+    ptsize = DEFAULT_PTSIZE;
+	font = TTF_OpenFont(DEFAULT_FONT, ptsize);
 	if ( font == NULL ) {
 		fprintf(stderr, "Couldn't load %d pt font from %s: %s\n",
-					ptsize, argv[0], SDL_GetError());
+					ptsize, DEFAULT_FONT, SDL_GetError());
 		cleanup(2);
 	}
 	TTF_SetFontStyle(font, renderstyle);
 	TTF_SetFontOutline(font, outline);
 	TTF_SetFontKerning(font, kerning);
-
-	if( dump ) {
-		for( i = 48; i < 123; i++ ) {
-			SDL_Surface* glyph = NULL;
-
-			glyph = TTF_RenderGlyph_Shaded( font, i, *forecol, *backcol );
-
-			if( glyph ) {
-				char outname[64];
-				sprintf( outname, "glyph-%d.bmp", i );
-				SDL_SaveBMP( glyph, outname );
-			}
-
-		}
-		cleanup(0);
-	}
 
 	/* Set a 640x480x8 video mode */
 	screen = SDL_SetVideoMode(640, 480, 8, SDL_SWSURFACE);
@@ -259,11 +157,9 @@ int main(int argc, char *argv[])
 	}
 	
 	/* Render and center the message */
-	if ( argc > 2 ) {
-		message = argv[2];
-	} else {
-		message = DEFAULT_TEXT;
-	}
+    message = L"幹";
+
+    rendertype = RENDER_UNICODE;
 	switch (rendertype) {
 	    case RENDER_LATIN1:
 		if ( rendersolid ) {
@@ -283,33 +179,9 @@ int main(int argc, char *argv[])
 
 	    case RENDER_UNICODE:
 		{
-			Uint16 unicode_text[BUFSIZ];
+			Uint16 unicode_text[BUFSIZ] = {0x4f60, 0x597d, 0};
+#if 0
 			int index;
-#ifdef HAVE_ICONV
-			/* Use iconv to convert the message into utf-16.
-			 * "char" and "" are aliases for the local 8-bit encoding */
-			iconv_t cd;
-			/*ICONV_CONST*/ char *from_str = message;
-			char *to_str = (char*)unicode_text;
-			size_t from_sz = strlen(message) + 1;
-			size_t to_sz = sizeof(unicode_text);
-			size_t res;
-			int i;
-
-			if ((cd = iconv_open("UTF-16", "char")) == (iconv_t)-1
-			    && (cd = iconv_open("UTF-16", "")) == (iconv_t)-1) {
-				perror("Couldn't open iconv");
-				exit(1);
-			}
-
-			res = iconv(cd, &from_str, &from_sz, &to_str, &to_sz);
-			if (res == -1) {
-				perror("Couldn't use iconv");
-				exit(1);
-			}
-
-			iconv_close(cd);
-#else
 			/* Convert the message from ascii into utf-16.
 			 * This is unreliable as a test because it always
 			 * gives the local ordering. */
@@ -318,7 +190,6 @@ int main(int argc, char *argv[])
 			}
 			unicode_text[index] = 0;
 #endif
-
 			if ( rendersolid ) {
 				text = TTF_RenderUNICODE_Solid(font,
 					unicode_text, *forecol);
