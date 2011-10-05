@@ -57,17 +57,8 @@ int main(int argc, char *argv[])
 	SDL_Color *backcol;
 	SDL_Rect dstrect;
 	SDL_Event event;
-	int renderstyle;
-	enum {
-		RENDER_LATIN1,
-		RENDER_UTF8,
-		RENDER_UNICODE
-	} rendertype;
-	char *message, string[128];
+	char *message;
 
-	/* Look for special rendering types */
-	renderstyle = TTF_STYLE_NORMAL;
-	rendertype = RENDER_LATIN1;
 	/* Default is black and white */
 	forecol = &myforecolor;
 	backcol = &mybackcolor;
@@ -93,7 +84,6 @@ int main(int argc, char *argv[])
 					ptsize, DEFAULT_FONT, SDL_GetError());
 		cleanup(2);
 	}
-	TTF_SetFontStyle(font, renderstyle);
 
 	/* Set a 640x480x8 video mode */
 	screen = SDL_SetVideoMode(640, 480, 8, SDL_SWSURFACE);
@@ -107,18 +97,6 @@ int main(int argc, char *argv[])
 	SDL_FillRect(screen, NULL,
 			SDL_MapRGB(screen->format, backcol->r, backcol->g, backcol->b));
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
-
-	/* Show which font file we're looking at */
-	sprintf(string, "Font file: %s", argv[0]);  /* possible overflow */
-	text = TTF_RenderText_Shaded(font, string, *forecol, *backcol);
-	if ( text != NULL ) {
-		dstrect.x = 4;
-		dstrect.y = 4;
-		dstrect.w = text->w;
-		dstrect.h = text->h;
-		SDL_BlitSurface(text, NULL, screen, &dstrect);
-		SDL_FreeSurface(text);
-	}
 
 	/* Render and center the message */
     message = DEFAULT_TEXT;
