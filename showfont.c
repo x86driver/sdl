@@ -31,14 +31,11 @@
 #include "SDL.h"
 #include "SDL_ttf.h"
 
-#define DEFAULT_PTSIZE	32
+#define DEFAULT_PTSIZE	24
 #define DEFAULT_TEXT	"The quick brown fox jumped over the lazy dog"
 #define NUM_COLORS      256
-//#define DEFAULT_FONT    "/usr/share/cups/fonts/Monospace"
-#define DEFAULT_FONT    "/usr/share/fonts/truetype/arphic/uming.ttc"
-
-static char *Usage =
-"Usage: %s [-solid] [-utf8|-unicode] [-b] [-i] [-u] [-s] [-outline size] [-hintlight|-hintmono|-hintnone] [-nokerning] [-fgcol r,g,b] [-bgcol r,g,b] <font>.ttf [ptsize] [text]\n";
+#define DEFAULT_FONT    "/usr/share/cups/fonts/Monospace"
+//#define DEFAULT_FONT    "/usr/share/fonts/truetype/arphic/uming.ttc"
 
 static void cleanup(int exitcode)
 {
@@ -49,28 +46,18 @@ static void cleanup(int exitcode)
 
 int main(int argc, char *argv[])
 {
-	char *argv0 = argv[0];
 	SDL_Surface *screen;
 	TTF_Font *font;
-	SDL_Surface *text, *temp;
+	SDL_Surface *text;
 	int ptsize;
-	int i, done;
-	int rdiff, gdiff, bdiff;
-	SDL_Color colors[NUM_COLORS];
-	SDL_Color white = { 0xFF, 0xFF, 0xFF, 0 };
-	SDL_Color black = { 0x00, 0x00, 0x00, 0 };
+	int done;
     SDL_Color mybackcolor = {0xff, 0, 0, 0};
     SDL_Color myforecolor = {0, 0, 0xff, 0};
 	SDL_Color *forecol;
 	SDL_Color *backcol;
 	SDL_Rect dstrect;
 	SDL_Event event;
-	int rendersolid;
 	int renderstyle;
-	int outline;
-	int hinting;
-	int kerning;
-	int dump;
 	enum {
 		RENDER_LATIN1,
 		RENDER_UTF8,
@@ -78,15 +65,9 @@ int main(int argc, char *argv[])
 	} rendertype;
 	char *message, string[128];
 
-	/* Look for special execution mode */
-	dump = 0;
 	/* Look for special rendering types */
-	rendersolid = 0;
 	renderstyle = TTF_STYLE_NORMAL;
 	rendertype = RENDER_LATIN1;
-	outline = 0;
-	hinting = TTF_HINTING_NORMAL;
-	kerning = 1;
 	/* Default is black and white */
 	forecol = &myforecolor;
 	backcol = &mybackcolor;
@@ -113,8 +94,6 @@ int main(int argc, char *argv[])
 		cleanup(2);
 	}
 	TTF_SetFontStyle(font, renderstyle);
-	TTF_SetFontOutline(font, outline);
-	TTF_SetFontKerning(font, kerning);
 
 	/* Set a 640x480x8 video mode */
 	screen = SDL_SetVideoMode(640, 480, 8, SDL_SWSURFACE);
@@ -124,17 +103,6 @@ int main(int argc, char *argv[])
 		cleanup(2);
 	}
 
-	/* Set a palette that is good for the foreground colored text */
-	rdiff = backcol->r - forecol->r;
-	gdiff = backcol->g - forecol->g;
-	bdiff = backcol->b - forecol->b;
-	for ( i=0; i<NUM_COLORS; ++i ) {
-		colors[i].r = forecol->r + (i*rdiff)/4;
-		colors[i].g = forecol->g + (i*gdiff)/4;
-		colors[i].b = forecol->b + (i*bdiff)/4;
-	}
-	SDL_SetColors(screen, colors, 0, NUM_COLORS);
-
 	/* Clear the background to background color */
 	SDL_FillRect(screen, NULL,
 			SDL_MapRGB(screen->format, backcol->r, backcol->g, backcol->b));
@@ -142,11 +110,7 @@ int main(int argc, char *argv[])
 
 	/* Show which font file we're looking at */
 	sprintf(string, "Font file: %s", argv[0]);  /* possible overflow */
-	if ( rendersolid ) {
-		text = TTF_RenderText_Solid(font, string, *forecol);
-	} else {
-		text = TTF_RenderText_Shaded(font, string, *forecol, *backcol);
-	}
+	text = TTF_RenderText_Shaded(font, string, *forecol, *backcol);
 	if ( text != NULL ) {
 		dstrect.x = 4;
 		dstrect.y = 4;
@@ -155,54 +119,11 @@ int main(int argc, char *argv[])
 		SDL_BlitSurface(text, NULL, screen, &dstrect);
 		SDL_FreeSurface(text);
 	}
-	
+
 	/* Render and center the message */
-    message = L"幹";
+    message = DEFAULT_TEXT;
 
-    rendertype = RENDER_UNICODE;
-	switch (rendertype) {
-	    case RENDER_LATIN1:
-		if ( rendersolid ) {
-			text = TTF_RenderText_Solid(font,message,*forecol);
-		} else {
-			text = TTF_RenderText_Shaded(font,message,*forecol,*backcol);
-		}
-		break;
-
-	    case RENDER_UTF8:
-		if ( rendersolid ) {
-			text = TTF_RenderUTF8_Solid(font,message,*forecol);
-		} else {
-			text = TTF_RenderUTF8_Shaded(font,message,*forecol,*backcol);
-		}
-		break;
-
-	    case RENDER_UNICODE:
-		{
-			Uint16 unicode_text[BUFSIZ] = {0x4f60, 0x597d, 0};
-#if 0
-			int index;
-			/* Convert the message from ascii into utf-16.
-			 * This is unreliable as a test because it always
-			 * gives the local ordering. */
-			for (index = 0; message[index]; index++) {
-				unicode_text[index] = message[index];
-			}
-			unicode_text[index] = 0;
-#endif
-			if ( rendersolid ) {
-				text = TTF_RenderUNICODE_Solid(font,
-					unicode_text, *forecol);
-			} else {
-				text = TTF_RenderUNICODE_Shaded(font,
-					unicode_text, *forecol, *backcol);
-			}
-		}
-		break;
-	    default:
-		text = NULL; /* This shouldn't happen */
-		break;
-	}
+	text = TTF_RenderText_Shaded(font,message,*forecol,*backcol);
 	if ( text == NULL ) {
 		fprintf(stderr, "Couldn't render text: %s\n", SDL_GetError());
 		TTF_CloseFont(font);
@@ -223,17 +144,6 @@ int main(int argc, char *argv[])
 		cleanup(2);
 	}
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
-
-	/* Set the text colorkey and convert to display format */
-	if ( SDL_SetColorKey(text, SDL_SRCCOLORKEY|SDL_RLEACCEL, 0) < 0 ) {
-		fprintf(stderr, "Warning: Couldn't set text colorkey: %s\n",
-								SDL_GetError());
-	}
-	temp = SDL_DisplayFormat(text);
-	if ( temp != NULL ) {
-		SDL_FreeSurface(text);
-		text = temp;
-	}
 
 	/* Wait for a keystroke, and blit text on mouse press */
 	done = 0;
