@@ -1,4 +1,4 @@
-TARGET = sdl1 point free hello border showfont
+TARGET = sdl1 point free hello border showfont anim
 
 all:$(TARGET)
 
@@ -26,6 +26,9 @@ border:border.cpp
 
 showfont:showfont.c
 	gcc $(CFLAGS) -o $@ $< `sdl-config --cflags --libs` `freetype-config --libs --cflags` $(SDLTTF)
+
+anim:anim.c
+	g++ $(CFLAGS) -o $@ $< `sdl-config --cflags --libs` -L/home/shane/source/libsdl-sge-030809dfsg/ -lSGE -I/home/shane/source/libsdl-sge-030809dfsg/
 
 up:hello
 	adb push hello /system/bin
