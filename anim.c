@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+//#include "sge.h"
 
 #define SCREEN_WIDTH    480
 #define SCREEN_HEIGHT   272
@@ -10,6 +11,7 @@
 #define HEIGHT          SCREEN_HEIGHT
 
 SDL_Surface* screen = NULL;
+//SDL_Surface *surface = NULL;
 SDL_Rect g_Rect;
 Uint8 g_Red, g_Green, g_Blue;
 Uint32 g_Color;
@@ -124,29 +126,32 @@ void sge_Rect(SDL_Surface *Surface, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, 
     _VLine(Surface,x1,y1,y2,color);
     _VLine(Surface,x2,y1,y2,color);
 
+#if 1
     sge_UpdateRect(Surface, x1, y1, x2-x1, 1);
     sge_UpdateRect(Surface, x1, y2, x2-x1+1, 1); /* Hmm? */
     sge_UpdateRect(Surface, x1, y1, 1, y2-y1);
     sge_UpdateRect(Surface, x2, y1, 1, y2-y1);
+#endif
 }
 
 void draw()
 {
-    int halfHeight;
+    Uint32 halfHeight;
     Uint32 color;
+    Uint32 target_color;
 
-    int sBaseColor = 0xff000000;
-    int sColors[] = {0x0000ff, 0x00ff00, 0xff0000};
-    int sIntervals[] = {0x000001, 0x000100, 0x010000};
+    Uint32 sBaseColor = 0xff000000;
+    Uint32 sColors[] = {0x0000ff, 0x00ff00, 0xff0000};
+    Uint32 sIntervals[] = {0x000001, 0x000100, 0x010000};
 
-    static int mCount = HEIGHT / 2;
-    static int mColorSelect = 0;
+    static Uint32 mCount = HEIGHT / 2;
+    static Uint32 mColorSelect = 0;
 
-    int i;
+    Uint32 i;
 
 //    color = SDL_MapRGB(screen->format, 255, 0, 0);
     color = sColors[mColorSelect];
-    int interval = sIntervals[mColorSelect];
+    Uint32 interval = sIntervals[mColorSelect];
 
     halfHeight = HEIGHT / 2;
 
@@ -154,15 +159,30 @@ void draw()
     rect.x = rect.y = 0;
     rect.w = WIDTH;
     rect.h = HEIGHT;
-    SDL_FillRect(screen, &rect, 0);
+//    SDL_FillRect(screen, &rect, 0);
 
     for (i = 0; i < halfHeight; ++i) {
-        int diff = (((mCount - i) * 4) * interval) % color;
+        Uint32 diff = (((mCount - i) * 4) * interval) % color;
+
+        Uint32 mycolor = sBaseColor+diff;
+        target_color = SDL_MapRGBA(screen->format,
+            (mycolor >> 16) & 0xff,
+            (mycolor >> 8)  & 0xff,
+            (mycolor)       & 0xff,
+            (mycolor >> 24) & 0xff);
+
         sge_Rect(screen, halfHeight - i, (halfHeight - 1) - i,
-             (WIDTH - halfHeight) + i, halfHeight + i, sBaseColor + diff);
+             (WIDTH - halfHeight) + i, halfHeight + i, target_color);
+
+//        SDL_FillRect(screen, NULL, target_color);
+
 //        printf("%d, %d, %d, %d, %u\n", halfHeight - i, (halfHeight - 1) - i,
-//             (WIDTH - halfHeight) + i, halfHeight + i, color + diff);
+//             (WIDTH - halfHeight) + i, halfHeight + i, sBaseColor + diff);
+//        SDL_Flip(screen);
+//        SDL_Delay(100);
     }
+
+    SDL_Flip(screen);
 
     ++mCount;
     mCount = mCount % 0xff;
@@ -183,8 +203,20 @@ int main(int argc, char* argv[])
     SDL_Init(SDL_INIT_VIDEO);
     atexit(SDL_Quit);
     screen =
-      SDL_SetVideoMode(SCREEN_WIDTH,SCREEN_HEIGHT,0,SDL_ANYFORMAT);
+      SDL_SetVideoMode(SCREEN_WIDTH,SCREEN_HEIGHT,16,SDL_HWSURFACE|SDL_DOUBLEBUF|SDL_HWPALETTE|SDL_HWACCEL|SDL_PREALLOC);
     SDL_Event ev;
+
+/*
+    SDL_PixelFormat *fmt = screen->format;
+    surface = SDL_CreateRGBSurface(SDL_HWSURFACE|SDL_DOUBLEBUF|SDL_HWPALETTE|SDL_HWACCEL|SDL_PREALLOC,
+        SCREEN_WIDTH, SCREEN_HEIGHT,
+        fmt->BitsPerPixel, fmt->Rmask, fmt->Gmask,fmt->Bmask, fmt->Amask);
+*/
+
+#ifdef BUILD_FOR_ANDROID
+    SDL_ShowCursor(SDL_DISABLE);
+#endif
+
 
 //    draw_sine();
     draw();
@@ -195,7 +227,7 @@ int main(int argc, char* argv[])
 
     	if (SDL_PollEvent(&ev) == 0) {
             draw();
-    	    SDL_UpdateRect(screen,0,0,0,0);
+//    	    SDL_UpdateRect(screen,0,0,0,0);
             continue;
     	}
 
