@@ -28,7 +28,8 @@ showfont:showfont.c
 	gcc $(CFLAGS) -o $@ $< `sdl-config --cflags --libs` `freetype-config --libs --cflags` $(SDLTTF)
 
 anim:anim.c
-	g++ $(CFLAGS) -o $@ $< `sdl-config --cflags --libs` -L/home/shane/source/libsdl-sge-030809dfsg/ -lSGE -I/home/shane/source/libsdl-sge-030809dfsg/
+	g++ $(CFLAGS) -o $@ $< `sdl-config --cflags --libs`
+# -L/home/shane/source/libsdl-sge-030809dfsg/ -lSGE -I/home/shane/source/libsdl-sge-030809dfsg/
 
 up:hello
 	adb push hello /system/bin

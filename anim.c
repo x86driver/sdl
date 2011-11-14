@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "sge.h"
 
 #define SCREEN_WIDTH    480
 #define SCREEN_HEIGHT   272
@@ -50,6 +49,85 @@ void draw_sine()
 	for (; i < size; i += 1/factor) {
 		draw_xy(i * factor, (int)(sin(i) * factor), 255, 0, 0);
 	}	
+}
+
+void sge_UpdateRect(SDL_Surface *screen, Sint16 x, Sint16 y, Uint16 w, Uint16 h)
+{
+//FIXME
+//    if(_sge_update!=1 || screen != SDL_GetVideoSurface()){return;}
+
+    if(x>=screen->w || y>=screen->h){return;}
+
+    Sint16 a,b;
+
+    a=w; b=h;
+
+    if(x < 0){x=0;}
+    if(y < 0){y=0;}
+
+    if(a+x > screen->w){a=screen->w-x;}
+    if(b+y > screen->h){b=screen->h-y;}
+
+    SDL_UpdateRect(screen,x,y,a,b);
+}
+
+void _HLine(SDL_Surface *Surface, Sint16 x1, Sint16 x2, Sint16 y, Uint32 Color)
+{
+    if(x1>x2){Sint16 tmp=x1; x1=x2; x2=tmp;}
+
+#if 0
+    //Do the clipping
+    #if SDL_VERSIONNUM(SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL) < \
+    SDL_VERSIONNUM(1, 1, 5)
+    if(y<Surface->clip_miny || y>Surface->clip_maxy || x1>Surface->clip_maxx || x2<Surface->clip_minx)
+        return;
+    if(x1<Surface->clip_minx)
+        x1=Surface->clip_minx;
+    if(x2>Surface->clip_maxx)
+        x2=Surface->clip_maxx;
+    #endif
+#endif
+
+    SDL_Rect l;
+    l.x=x1; l.y=y; l.w=x2-x1+1; l.h=1;
+
+    SDL_FillRect(Surface, &l, Color);
+}
+
+void _VLine(SDL_Surface *Surface, Sint16 x, Sint16 y1, Sint16 y2, Uint32 Color)
+{
+    if(y1>y2){Sint16 tmp=y1; y1=y2; y2=tmp;}
+
+#if 0
+    //Do the clipping
+    #if SDL_VERSIONNUM(SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL) < \
+    SDL_VERSIONNUM(1, 1, 5)
+    if(x<Surface->clip_minx || x>Surface->clip_maxx || y1>Surface->clip_maxy || y2<Surface->clip_miny)
+        return;
+    if(y1<Surface->clip_miny)
+        y1=Surface->clip_miny;
+    if(y2>Surface->clip_maxy)
+        y2=Surface->clip_maxy;
+    #endif
+#endif
+
+    SDL_Rect l;
+    l.x=x; l.y=y1; l.w=1; l.h=y2-y1+1;
+
+    SDL_FillRect(Surface, &l, Color);
+}
+
+void sge_Rect(SDL_Surface *Surface, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint32 color)
+{
+    _HLine(Surface,x1,x2,y1,color);
+    _HLine(Surface,x1,x2,y2,color);
+    _VLine(Surface,x1,y1,y2,color);
+    _VLine(Surface,x2,y1,y2,color);
+
+    sge_UpdateRect(Surface, x1, y1, x2-x1, 1);
+    sge_UpdateRect(Surface, x1, y2, x2-x1+1, 1); /* Hmm? */
+    sge_UpdateRect(Surface, x1, y1, 1, y2-y1);
+    sge_UpdateRect(Surface, x2, y1, 1, y2-y1);
 }
 
 void draw()
